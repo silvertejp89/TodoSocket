@@ -1,6 +1,6 @@
 import { Socket, io } from "socket.io-client";
 import "./App.css";
-import { useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { AddUser } from "./components/AddUser";
 import { Person } from "./models/Person";
 import { Todo } from "./models/Todo";
@@ -15,6 +15,11 @@ function App() {
   const [socket, setSocket] = useState<Socket>();
   const [persons, setPersons] = useState<Person[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [todo, setTodo] = useState<Todo>({
+    id: 0,
+    title: "",
+    isDone: false,
+  });
 
   useEffect(() => {
     const s = io("http://localhost:3000");
@@ -34,14 +39,34 @@ function App() {
     };
   }, []);
 
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setTodo({
+      ...todo,
+      title: e.target.value,
+      id: Date.now(),
+    });
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    socket?.emit("add_todo", todo);
+  };
+
   return (
     <>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="name"
+          value={todo.title}
+          onChange={handleChange}
+        />
+        <button>Spara</button>
+      </form>
       <AddUser socket={socket} />
       <ul>
-        {persons.map((p) => (
-          <li key={p.name}>
-            {p.name} - {p.age}
-          </li>
+        {todos.map((t) => (
+          <li key={t.id}>{t.title}</li>
         ))}
       </ul>
     </>
